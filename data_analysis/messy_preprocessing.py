@@ -1,4 +1,4 @@
-# Useful functions used for data analysis in my project
+# some preprocessing steps used for in my project
 
 #### DIRECTORIES HANDLING 
 
