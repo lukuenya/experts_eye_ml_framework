@@ -1,4 +1,5 @@
 # some preprocessing steps used for in my project
+# Garbage code but useful ! (Need to modify it )
 
 #### DIRECTORIES HANDLING 
 
@@ -188,8 +189,96 @@ for entry in os.scandir(main_folder):
 
 print('ok')
 
+# ----------------------------------------------------------------------------------------
+
+import os
+import gzip
+import shutil
+
+def unzip_and_move_files(root_dir):
+    for dirpath, dirnames, filenames in os.walk(root_dir):
+        for file in filenames:
+            if file.endswith(".gz"):
+                file_path = os.path.join(dirpath, file)
+                
+                # Create new file path without .gz
+                new_file_path = os.path.join(dirpath, file[:-3])
+                
+                # Unzip the file
+                with gzip.open(file_path, 'rb') as f_in:
+                    with open(new_file_path, 'wb') as f_out:
+                        shutil.copyfileobj(f_in, f_out)
+                
+                # Delete the .gz file
+                os.remove(file_path)
+
+                # Define the destination directory (2nd level)
+                destination_dir = os.path.join(root_dir, os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(dirpath)))))
+                
+                # Create the directory if it doesn't exist
+                if not os.path.exists(destination_dir):
+                    os.makedirs(destination_dir)
+                
+                # Move the unzipped file to the destination directory
+                shutil.move(new_file_path, os.path.join(destination_dir, file[:-3]))
+
+unzip_and_move_files('./ici/')
+
+# ----------------------------------------------------------------------------------------------------
+# Find list of folder in root and keep equivalent in df
+rootDir = 'p:/DATA_OCT_22/stade_2_Global_dataset/Donnees_t0_copy_posture/'
+folder_names = [name for name in os.listdir(rootDir) if os.path.isdir(os.path.join(rootDir, name))]
+
+print(list(folder_names))
+
+# Keep rows where 'Foldername' is in the list of folder names
+df = df[df['Foldername'].isin(folder_names)]
 
 
+# ---------------------------------------------------------------------------------------------------------
+
+import os
+import shutil
+
+# Specify the directory you want to start from
+rootDir = 'p:/DATA_OCT_22/Data_Oct_2022/Anon_20221010/Donnees'
+
+# Specify the directory where you want to copy folders
+destinationDir = 'p:/DATA_OCT_22/stade_2_Global_dataset/New'
+
+
+# For each directory in the directory tree
+for dir_name, subdir_list, file_list in os.walk(rootDir):
+    # If the base directory name is in the list of list_col
+    if os.path.basename(dir_name) in list_col:
+        # Construct the destination path
+        dest_path = os.path.join(destinationDir, os.path.basename(dir_name))
+        # Copy the directory
+        shutil.copytree(dir_name, dest_path)
+# -----------------------------------------------------------------------------------------
+
+# Merge partially duplicated rows
+def merge_rows_with_more_data(group):
+    if len(group) == 1:
+        return group
+    
+
+    row1, row2 = group.iloc[0], group.iloc[1]
+    row1_count = row1.notnull().sum()
+    row2_count = row2.notnull().sum()
+
+    if row1_count >= row2_count:
+        return row1.combine_first(row2).to_frame().T
+    else:
+        return row2.combine_first(row1).to_frame().T
+    
+# Group the Dataframe by 'foldernumber' column
+grouped_by = data.groupby('Foldername')
+
+# merge the partially duplicated rows within each group
+data_v1 = pd.concat([merge_rows_with_more_data(group) for _, group in grouped_by]).reset_index(drop=True)
+
+data_v1.to_excel('merged_rows_encoded_data.xlsx', index=False)
 
 
 
