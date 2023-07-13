@@ -280,5 +280,35 @@ data_v1 = pd.concat([merge_rows_with_more_data(group) for _, group in grouped_by
 
 data_v1.to_excel('merged_rows_encoded_data.xlsx', index=False)
 
+#--------------------------------------------------------------------------
+
+def merge_rows_with_more_data(group):
+    """
+    In this code, the merge_rows_with_more_data function goes through each row in a group and uses
+    the combine_first method to fill in null values in the base row with values from the current row. 
+    This is done for each column in the DataFrame. The result is a DataFrame where each group of duplicate rows
+    has been merged into a single row, with each column containing the first non-null value found in the duplicate rows.
+
+    """
+    # Use the first row as the base
+    base_row = group.iloc[0]
+    
+    # Iterate over the rest of the rows in the group
+    for i in range(1, len(group)):
+        # Use combine_first to fill in null values in the base row with values from the current row
+        base_row = base_row.combine_first(group.iloc[i])
+    
+    # Return the merged row
+    return base_row
+
+# Group the DataFrame by 'Foldername' column
+grouped = all_data_copy.groupby('Foldername')
+
+# Apply the merge_rows_with_more_data function to each group
+merged_df = grouped.apply(merge_rows_with_more_data).reset_index(drop=True)
+
+# Print the merged DataFrame
+print(merged_df)
+
 
 
